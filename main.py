@@ -15,14 +15,26 @@ import sqlite3
 current_cards = []
 import random
 from kivy.app import App
-# app= App.get_running_app()
+from kivy.properties import ObjectProperty
+
 
 #Access Database
 conn = sqlite3.connect("flashcards.db")
 c = conn.cursor()
 c.execute("SELECT * FROM flashcards WHERE word_date = 0")
-current_cards = c.fetchmany(3)
+current_cards = c.fetchmany(5)
 print(current_cards)
+
+sm = """
+ScreenManager:
+    id:manager
+    FlashcardsPage:
+        id:FlashcardsPage
+    ResultsPage:
+        id:ResultsPage
+"""
+
+card_text = current_cards[0][2]
 
 class MainPage(GridLayout):
     def __init__(self, **kwargs):
@@ -62,7 +74,7 @@ class MainPage(GridLayout):
         quit()
 
 class FlashcardsPage(GridLayout):
-    
+    flashcard_stuff = ObjectProperty(None)
     def __init__(self, **kwargs):
         super(FlashcardsPage, self).__init__( **kwargs)
         self.cols = 1
@@ -76,7 +88,7 @@ class FlashcardsPage(GridLayout):
         
         else:
             # Display current card data
-            self.title = Label(text=current_cards[0][2], color=[0, 0, 0, 1])
+            self.title = Label(text=card_text, color=[0, 0, 0, 1])
             self.add_widget(self.title)
 
             self.img=Image(source ='.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1]))
@@ -91,9 +103,12 @@ class FlashcardsPage(GridLayout):
         # current_cards.pop(0)
         # self.title.text = current_cards[0][2]
         # self.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
-        print(App.get_running_app().root.ids)
+        # print(App.get_running_app().root.ids)
+        # self.title.text = str(random.randint(0,200))
         # print(App.get_running_app().root.parent.FlashcardsPage)
         # self.update()
+        # object_methods = [method_name for method_name in dir(App.get_running_app()) if callable(getattr(App.get_running_app(), method_name))]
+        # print(object_methods)
         language_app.screen_manager.current = "Result"
 
     def finished(self, instance):
@@ -104,7 +119,7 @@ class FlashcardsPage(GridLayout):
         pass
 
 class ResultsPage(GridLayout):
-    # stuff_p = ObjectProperty(None)
+    results_stuff = ObjectProperty(None)
     def __init__(self, **kwargs):
         super(ResultsPage, self).__init__( **kwargs)
         self.cols = 1
@@ -147,7 +162,6 @@ class ResultsPage(GridLayout):
             current_cards.pop(0)
             FlashcardsPage.data = current_cards
             FlashcardsPage.update
-            current_cards.pop(0)
             self.title.text = current_cards[0][2]
             self.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
             language_app.screen_manager.current = "Flash"
@@ -165,23 +179,30 @@ class ResultsPage(GridLayout):
 
     def easy_card(self, instance):
         print("easy card..")
-        
-        # FlashcardsPage.title.text = current_cards[0][2]
-        # print(current_cards)
+        print(current_cards)
+        print('deleting card...')
         current_cards.pop(0)
-        FlashcardsPage().clear_widgets
-        FlashcardsPage().title.text = str(random.randint(0,200))
-        # Label(text=current_cards[0][2], color=[0, 0, 0, 1])
+        print(current_cards)
+        card_text = current_cards[0][2]
+        App.get_running_app().flashcards_page.title.text = current_cards[0][2]
+        App.get_running_app().flashcards_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
+        # print("here is the selected text")
+        # print(App.get_running_app().screen_manager)
+        # App.get_running_app().flashcards_page.title = current_cards[0][2]
+        # FlashcardsPage().img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
+        # print(App.get_running_app().flashcards_page.title)
+        # App.get_running_app().flashcards_page.title = str(random.randint(0,200))
+        # FlashcardsPage().add_widget(Label(text="hi"))
         # print(list(self.parent.parent))
-        object_methods = [method_name for method_name in dir(self) if callable(getattr(self, method_name))]
-        print(object_methods)
-        object_methods2 = [method_name for method_name in dir(App.get_running_app()) if callable(getattr(App.get_running_app(), method_name))]
-        print(object_methods2)
+        # object_methods = [method_name for method_name in dir(App.get_running_app().screen_manager) if callable(getattr(App.get_running_app().screen_manager, method_name))]
+        # print(object_methods)
+        # object_methods2 = [method_name for method_name in dir(App.get_running_app().flashcards_page.title) if callable(getattr(App.get_running_app().flashcards_page.title, method_name))]
+        # print(object_methods2)
         # print(self.parent.FlashcardsPage.title.text)
         try:
             FlashcardsPage().add_widget(FlashcardsPage.title)
             
-            language_app.screen_manager.current = "Main"
+            language_app.screen_manager.current = "Flash"
         except:
             language_app.screen_manager.current = "Main"
             
@@ -237,6 +258,11 @@ class MyApp(App):
         screen = Screen(name = "Flash")
         screen.add_widget(self.flashcards_page)
         self.screen_manager.add_widget(screen)
+
+
+        # screen.add_widget(FlashcardsPage())
+        # MyApp.screen_manager.add_widget(Screen(name = "Flash"))
+
 
         self.results_page = ResultsPage()
         screen = Screen(name = "Result")

@@ -9,9 +9,6 @@ from kivy.core.window import Window
 Window.clearcolor = (1, 1, 1, 1)
 from kivy.graphics import Color
 import sqlite3
-# from flashcards import FlashcardsPage
-# global current_cards
-# from kivy.properties import ObjectProperty, ListProperty
 current_cards = []
 import random
 from kivy.app import App
@@ -22,17 +19,17 @@ from kivy.properties import ObjectProperty
 conn = sqlite3.connect("flashcards.db")
 c = conn.cursor()
 c.execute("SELECT * FROM flashcards WHERE word_date = 0")
-current_cards = c.fetchmany(5)
+current_cards = c.fetchmany(3)
 print(current_cards)
 
-sm = """
-ScreenManager:
-    id:manager
-    FlashcardsPage:
-        id:FlashcardsPage
-    ResultsPage:
-        id:ResultsPage
-"""
+# sm = """
+# ScreenManager:
+#     id:manager
+#     FlashcardsPage:
+#         id:FlashcardsPage
+#     ResultsPage:
+#         id:ResultsPage
+# """
 
 class MainPage(GridLayout):
     def __init__(self, **kwargs):
@@ -98,23 +95,12 @@ class FlashcardsPage(GridLayout):
             self.add_widget(self.results_button)
 
     def results(self, instance):
-        # current_cards.pop(0)
-        # self.title.text = current_cards[0][2]
-        # self.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
-        # print(App.get_running_app().root.ids)
-        # self.title.text = str(random.randint(0,200))
-        # print(App.get_running_app().root.parent.FlashcardsPage)
-        # self.update()
-        # object_methods = [method_name for method_name in dir(App.get_running_app()) if callable(getattr(App.get_running_app(), method_name))]
-        # print(object_methods)
+        App.get_running_app().results_page.title.text = current_cards[0][2]
+        App.get_running_app().results_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
         language_app.screen_manager.current = "Result"
 
     def finished(self, instance):
         language_app.screen_manager.current = "Main"
-
-    def update(self):
-        # self.results_button.clear_widgets
-        pass
 
 class ResultsPage(GridLayout):
     results_stuff = ObjectProperty(None)
@@ -128,7 +114,6 @@ class ResultsPage(GridLayout):
         try:
             self.title = Label(text=self.data[0][2], color=[0, 0, 0, 1])
             self.add_widget(self.title)
-
 
             self.img=Image(source ='.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1]))
             self.add_widget(self.img)
@@ -163,8 +148,6 @@ class ResultsPage(GridLayout):
             print(current_cards)
             print("doing try")
             language_app.screen_manager.current = "Flash"
-            App.get_running_app().results_page.title.text = current_cards[0][2]
-            App.get_running_app().results_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
         except:
             language_app.screen_manager.current = "Main"
 
@@ -177,8 +160,6 @@ class ResultsPage(GridLayout):
             print(current_cards)
             print("doing try")
             language_app.screen_manager.current = "Flash"
-            App.get_running_app().results_page.title.text = current_cards[0][2]
-            App.get_running_app().results_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
         except:
             language_app.screen_manager.current = "Main"
 
@@ -191,8 +172,6 @@ class ResultsPage(GridLayout):
             print(current_cards)
             print("doing try")
             language_app.screen_manager.current = "Flash"
-            App.get_running_app().results_page.title.text = current_cards[0][2]
-            App.get_running_app().results_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
         except:
             language_app.screen_manager.current = "Main"
 
@@ -210,10 +189,8 @@ class StatisticsPage(GridLayout):
         self.back_button.bind(on_press = self.back)
         self.add_widget(self.back_button)
 
-
     def back(self, instance):
         language_app.screen_manager.current = "Main"
-
 
 
 class InstructionsPage(GridLayout):
@@ -248,11 +225,6 @@ class MyApp(App):
         screen.add_widget(self.flashcards_page)
         self.screen_manager.add_widget(screen)
 
-
-        # screen.add_widget(FlashcardsPage())
-        # MyApp.screen_manager.add_widget(Screen(name = "Flash"))
-
-
         self.results_page = ResultsPage()
         screen = Screen(name = "Result")
         screen.add_widget(self.results_page)
@@ -269,9 +241,6 @@ class MyApp(App):
         self.screen_manager.add_widget(screen)
 
         return self.screen_manager
-
-
-        # return MainMenu()
 
 if __name__ == "__main__":
     # add database creation if it does not yet exist, by running install.py

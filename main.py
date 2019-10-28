@@ -34,8 +34,6 @@ ScreenManager:
         id:ResultsPage
 """
 
-card_text = current_cards[0][2]
-
 class MainPage(GridLayout):
     def __init__(self, **kwargs):
         super().__init__( **kwargs)
@@ -88,7 +86,7 @@ class FlashcardsPage(GridLayout):
         
         else:
             # Display current card data
-            self.title = Label(text=card_text, color=[0, 0, 0, 1])
+            self.title = Label(text=current_cards[0][2], color=[0, 0, 0, 1])
             self.add_widget(self.title)
 
             self.img=Image(source ='.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1]))
@@ -160,11 +158,13 @@ class ResultsPage(GridLayout):
         print("repeat card..")
         try:
             current_cards.pop(0)
-            FlashcardsPage.data = current_cards
-            FlashcardsPage.update
-            self.title.text = current_cards[0][2]
-            self.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
+            App.get_running_app().flashcards_page.title.text = current_cards[0][2]
+            App.get_running_app().flashcards_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
+            print(current_cards)
+            print("doing try")
             language_app.screen_manager.current = "Flash"
+            App.get_running_app().results_page.title.text = current_cards[0][2]
+            App.get_running_app().results_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
         except:
             language_app.screen_manager.current = "Main"
 
@@ -172,40 +172,29 @@ class ResultsPage(GridLayout):
         print("ok card..")
         try:
             current_cards.pop(0)
-            FlashcardsPage.data = current_cards
+            App.get_running_app().flashcards_page.title.text = current_cards[0][2]
+            App.get_running_app().flashcards_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
+            print(current_cards)
+            print("doing try")
             language_app.screen_manager.current = "Flash"
+            App.get_running_app().results_page.title.text = current_cards[0][2]
+            App.get_running_app().results_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
         except:
             language_app.screen_manager.current = "Main"
 
     def easy_card(self, instance):
         print("easy card..")
-        print(current_cards)
-        print('deleting card...')
-        current_cards.pop(0)
-        print(current_cards)
-        card_text = current_cards[0][2]
-        App.get_running_app().flashcards_page.title.text = current_cards[0][2]
-        App.get_running_app().flashcards_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
-        # print("here is the selected text")
-        # print(App.get_running_app().screen_manager)
-        # App.get_running_app().flashcards_page.title = current_cards[0][2]
-        # FlashcardsPage().img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
-        # print(App.get_running_app().flashcards_page.title)
-        # App.get_running_app().flashcards_page.title = str(random.randint(0,200))
-        # FlashcardsPage().add_widget(Label(text="hi"))
-        # print(list(self.parent.parent))
-        # object_methods = [method_name for method_name in dir(App.get_running_app().screen_manager) if callable(getattr(App.get_running_app().screen_manager, method_name))]
-        # print(object_methods)
-        # object_methods2 = [method_name for method_name in dir(App.get_running_app().flashcards_page.title) if callable(getattr(App.get_running_app().flashcards_page.title, method_name))]
-        # print(object_methods2)
-        # print(self.parent.FlashcardsPage.title.text)
         try:
-            FlashcardsPage().add_widget(FlashcardsPage.title)
-            
+            current_cards.pop(0)
+            App.get_running_app().flashcards_page.title.text = current_cards[0][2]
+            App.get_running_app().flashcards_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
+            print(current_cards)
+            print("doing try")
             language_app.screen_manager.current = "Flash"
+            App.get_running_app().results_page.title.text = current_cards[0][2]
+            App.get_running_app().results_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
         except:
             language_app.screen_manager.current = "Main"
-            
 
     def back(self, instance):
         language_app.screen_manager.current = "Main"

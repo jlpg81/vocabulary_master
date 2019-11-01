@@ -1,26 +1,31 @@
 import sqlite3
 from install_data import data
+import datetime
 
-conn = sqlite3.connect("flashcards.db")
+zero = datetime.date.today() - datetime.date.today()
 
-c = conn.cursor()
+def install_database():
+    conn = sqlite3.connect("flashcards.db")
 
-c.execute("""CREATE TABLE flashcards (
-    id integer,
-    english text,
-    vietnamese text,
-    word_level integer,
-    word_date integer
-    )""")
+    c = conn.cursor()
 
-for i in data:
-    c.execute("INSERT INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date)",
-    {'id':i[0], 'english':i[1], 'vietnamese':i[2], 'word_level':0, 'word_date':0})
+    c.execute("""CREATE TABLE flashcards (
+        id integer,
+        english text,
+        vietnamese text,
+        word_level integer,
+        word_date text,
+        days_left text
+        )""")
 
-c.execute("SELECT * FROM flashcards")
+    for i in data:
+        c.execute("INSERT INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
+        {'id':i[0], 'english':i[1], 'vietnamese':i[2], 'word_level':0, 'word_date':datetime.date(2019, 10, 29), 'days_left': 0})
 
-# print(c.fetchall())
+    c.execute("SELECT * FROM flashcards")
 
-conn.commit()
+    # print(c.fetchall())
 
-conn.close()
+    conn.commit()
+
+    conn.close()

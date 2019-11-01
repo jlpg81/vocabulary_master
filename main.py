@@ -12,24 +12,84 @@ import sqlite3
 current_cards = []
 import random
 from kivy.app import App
-from kivy.properties import ObjectProperty
+import datetime
+import os
+from install import install_database
 
+"""
+def today():
+    return str(datetime.date.today())
 
-#Access Database
+def days_left():
+    c.execute("SELECT * FROM flashcards")
+    cards = c.fetchall()
+    for i in cards:
+        year = int(i[4][0:4])
+        month = int(i[4][5:7])
+        day = int(i[4][8:10])
+        last_date = datetime.date(year, month, day)
+        days_left = last_date - datetime.date.today()
+        a = int(str(days_left).strip(" days, 0:00:00"))
+        # print(a)
+        four = 4
+        print("changing "+i[1])
+        c.execute("CREATE TEMP TABLE _Variables(days_left int)")
+        c.execute("INSERT INTO _Variables (days_left) VALUES (:days_left)", {'days_left': a})
+        # c.execute("UPDATE flashcards SET days_left=a WHERE id=1 ")
+        c.execute("SELECT * FROM _Variables")
+        b = c.fetchall()
+        print(b)
+        conn.commit()
+        c.execute(" DROP TABLE _Variables")
+
+        # c.execute("REPLACE flashcards SET days_left=a WHERE id=1 VALUES (:)")
+
+        c.execute("INSERT INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
+        {'id':i[0], 'english':i[1], 'vietnamese':i[2], 'word_level':0, 'word_date':datetime.date(2019, 10, 29), 'days_left': 0})
+        # a = datetime.datetime.strptime(str(days_left), '%d')
+        # print(a)
+        # if days_left < (datetime.date.today()-datetime.date.today()):
+        #     print("days negative")
+        # if days_left > (datetime.date.today()-datetime.date.today()):
+        #     print("days positive")
+"""
+#Installing database
+if os.path.exists("flashcards.db"):
+    print("database exists")
+else:
+    print("installing database...")
+    install_database()
+
+#Accessing Database
 conn = sqlite3.connect("flashcards.db")
 c = conn.cursor()
-c.execute("SELECT * FROM flashcards WHERE word_date = 0")
-current_cards = c.fetchmany(3)
-print(current_cards)
+# conn.create_function("today", 0, today)
 
-# sm = """
-# ScreenManager:
-#     id:manager
-#     FlashcardsPage:
-#         id:FlashcardsPage
-#     ResultsPage:
-#         id:ResultsPage
-# """
+#Updating database
+# c.execute("UPDATE flashcards SET days_left = today()")
+# conn.commit()
+
+# days_left()
+
+
+# try:
+#     today = datetime.date.today()
+#     c.execute("UPDATE flashcards SET days_left = 'datetime.date.today()' - word_date")
+# except:
+#     pass
+
+
+#Requesting new cards
+try:
+    c.execute("SELECT * FROM flashcards WHERE days_left = 0 or days_left < 0")
+    current_cards = c.fetchmany(10)
+except:
+    pass
+
+
+
+
+
 
 class MainPage(GridLayout):
     def __init__(self, **kwargs):
@@ -57,7 +117,10 @@ class MainPage(GridLayout):
         self.add_widget(self.quit_button)
     
     def start(self, instance):
-        language_app.screen_manager.current = "Flash"
+        if current_cards == []:
+            language_app.screen_manager.current = "Finished"
+        else:
+            language_app.screen_manager.current = "Flash"
 
     def statistics(self, instance):
         language_app.screen_manager.current = "Statistics"
@@ -69,20 +132,11 @@ class MainPage(GridLayout):
         quit()
 
 class FlashcardsPage(GridLayout):
-    flashcard_stuff = ObjectProperty(None)
     def __init__(self, **kwargs):
         super(FlashcardsPage, self).__init__( **kwargs)
         self.cols = 1
-
-        if current_cards == []:
-            self.add_widget(Label(text="You finished your cards for today. Please come back tomorrow.", color=[0, 0, 0, 1]))
-
-            self.finished_button = Button(text='Finish')
-            self.finished_button.bind(on_press = self.finished)
-            self.add_widget(self.finished_button)
         
-        else:
-            # Display current card data
+        try:
             self.title = Label(text=current_cards[0][2], color=[0, 0, 0, 1])
             self.add_widget(self.title)
 
@@ -93,51 +147,56 @@ class FlashcardsPage(GridLayout):
             self.results_button = Button(text='Next')
             self.results_button.bind(on_press = self.results)
             self.add_widget(self.results_button)
+        except:
+            print("An error has occured in FlashcardsPage")
+            language_app.screen_manager.current = "Main"
 
     def results(self, instance):
         App.get_running_app().results_page.title.text = current_cards[0][2]
+        App.get_running_app().results_page.answer.text = current_cards[0][1]
         App.get_running_app().results_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
         language_app.screen_manager.current = "Result"
 
-    def finished(self, instance):
+    def finished(self):
         language_app.screen_manager.current = "Main"
 
 class ResultsPage(GridLayout):
-    results_stuff = ObjectProperty(None)
     def __init__(self, **kwargs):
         super(ResultsPage, self).__init__( **kwargs)
         self.cols = 1
 
         # Display current card data
-        self.data = current_cards
-        
         try:
-            self.title = Label(text=self.data[0][2], color=[0, 0, 0, 1])
+            self.title = Label(text=current_cards[0][2], color=[0, 0, 0, 1])
             self.add_widget(self.title)
 
             self.img=Image(source ='.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1]))
             self.add_widget(self.img)
 
-            #Display buttons
-            self.repeat_button = Button(text='Repeat (-1)')
-            self.repeat_button.bind(on_press = self.repeat_card)
-            self.add_widget(self.repeat_button)
-
-            self.ok_button = Button(text='Ok (+1)')
-            self.ok_button.bind(on_press = self.ok_card)
-            self.add_widget(self.ok_button)
-
-            self.easy_button = Button(text='Easy (+2)')
-            self.easy_button.bind(on_press = self.easy_card)
-            self.add_widget(self.easy_button)
-
-            self.add_widget(Label(text=''))
-
-            self.back_button = Button(text='Back to main menu')
-            self.back_button.bind(on_press = self.back)
-            self.add_widget(self.back_button)
+            self.answer = Label(text=current_cards[0][1], color=[0, 0, 0, 1])
+            self.add_widget(self.answer)
         except:
-            pass
+            language_app.screen_manager.current = "Main"
+
+        #Display buttons
+        self.repeat_button = Button(text='Repeat (-1)')
+        self.repeat_button.bind(on_press = self.repeat_card)
+        self.add_widget(self.repeat_button)
+
+        self.ok_button = Button(text='Ok (+1)')
+        self.ok_button.bind(on_press = self.ok_card)
+        self.add_widget(self.ok_button)
+
+        self.easy_button = Button(text='Easy (+2)')
+        self.easy_button.bind(on_press = self.easy_card)
+        self.add_widget(self.easy_button)
+
+        self.add_widget(Label(text=''))
+
+        self.back_button = Button(text='Back to main menu')
+        self.back_button.bind(on_press = self.back)
+        self.add_widget(self.back_button)
+
 
     def repeat_card(self, instance):
         print("repeat card..")
@@ -146,10 +205,9 @@ class ResultsPage(GridLayout):
             App.get_running_app().flashcards_page.title.text = current_cards[0][2]
             App.get_running_app().flashcards_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
             print(current_cards)
-            print("doing try")
             language_app.screen_manager.current = "Flash"
         except:
-            language_app.screen_manager.current = "Main"
+            language_app.screen_manager.current = "Finished"
 
     def ok_card(self, instance):
         print("ok card..")
@@ -158,10 +216,9 @@ class ResultsPage(GridLayout):
             App.get_running_app().flashcards_page.title.text = current_cards[0][2]
             App.get_running_app().flashcards_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
             print(current_cards)
-            print("doing try")
             language_app.screen_manager.current = "Flash"
         except:
-            language_app.screen_manager.current = "Main"
+            language_app.screen_manager.current = "Finished"
 
     def easy_card(self, instance):
         print("easy card..")
@@ -170,12 +227,25 @@ class ResultsPage(GridLayout):
             App.get_running_app().flashcards_page.title.text = current_cards[0][2]
             App.get_running_app().flashcards_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
             print(current_cards)
-            print("doing try")
             language_app.screen_manager.current = "Flash"
         except:
-            language_app.screen_manager.current = "Main"
+            language_app.screen_manager.current = "Finished"
 
     def back(self, instance):
+        language_app.screen_manager.current = "Main"
+
+class FinishedPage(GridLayout):
+    def __init__(self, **kwargs):
+        super(FinishedPage, self).__init__( **kwargs)
+        self.cols = 1
+        
+        self.add_widget(Label(text="You finished your cards for today. Please come back tomorrow.", color=[0, 0, 0, 1]))
+
+        self.finished_button = Button(text='Finish')
+        self.finished_button.bind(on_press = self.finished)
+        self.add_widget(self.finished_button)
+
+    def finished(self, instance):
         language_app.screen_manager.current = "Main"
 
 class StatisticsPage(GridLayout):
@@ -228,6 +298,11 @@ class MyApp(App):
         self.results_page = ResultsPage()
         screen = Screen(name = "Result")
         screen.add_widget(self.results_page)
+        self.screen_manager.add_widget(screen)
+
+        self.finished_page = FinishedPage()
+        screen = Screen(name = "Finished")
+        screen.add_widget(self.finished_page)
         self.screen_manager.add_widget(screen)
 
         self.statistics_page = StatisticsPage()

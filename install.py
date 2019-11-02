@@ -10,7 +10,7 @@ def install_database():
     c = conn.cursor()
 
     c.execute("""CREATE TABLE flashcards (
-        id integer,
+        id integer UNIQUE,
         english text,
         vietnamese text,
         word_level integer,
@@ -20,7 +20,7 @@ def install_database():
 
     for i in data:
         c.execute("INSERT INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
-        {'id':i[0], 'english':i[1], 'vietnamese':i[2], 'word_level':0, 'word_date':datetime.date(2019, 10, 29), 'days_left': 0})
+        {'id':i[0], 'english':i[1], 'vietnamese':i[2], 'word_level':0, 'word_date':"", 'days_left': 0})
 
     c.execute("SELECT * FROM flashcards")
 

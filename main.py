@@ -16,7 +16,7 @@ import datetime
 import os
 from install import install_database
 
-"""
+
 def today():
     return str(datetime.date.today())
 
@@ -28,31 +28,79 @@ def days_left():
         month = int(i[4][5:7])
         day = int(i[4][8:10])
         last_date = datetime.date(year, month, day)
-        days_left = last_date - datetime.date.today()
-        a = int(str(days_left).strip(" days, 0:00:00"))
+        
+        days_added = spaced_repetition(i[3])
+        # days_left = last_date + datetime.timedelta(days_added)
+        days_left = last_date + datetime.timedelta(days_added) - datetime.date.today()
+        print("old: " + str(days_left))
+        a = str(days_left).replace("0:00:00","")
+        print("new: "+a)
+        
+        try:
+            a = a.strip(" days,")
+        except:
+            a = 0
+        # a = int(str(days_left).strip(" days,"))
+        # except:
+        #     a = 0
         # print(a)
-        four = 4
-        print("changing "+i[1])
-        c.execute("CREATE TEMP TABLE _Variables(days_left int)")
-        c.execute("INSERT INTO _Variables (days_left) VALUES (:days_left)", {'days_left': a})
-        # c.execute("UPDATE flashcards SET days_left=a WHERE id=1 ")
-        c.execute("SELECT * FROM _Variables")
-        b = c.fetchall()
-        print(b)
+        c.execute("REPLACE INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
+        {'id':i[0], 'english':i[1], 'vietnamese':i[2], 'word_level':i[3], 'word_date':i[4], 'days_left': a})
         conn.commit()
-        c.execute(" DROP TABLE _Variables")
+        
+def repeat():
+    if current_cards[0][3] >= 1:
+        new_level = current_cards[0][3] - 1
+    else:
+        current_cards.append(current_cards[0])
+        new_level = 0
+    
+    print(new_level)
+    
+    print(current_cards[0])
+    print("repeat at lvl 0") 
+    c.execute("REPLACE INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
+    {'id':current_cards[0][0], 'english':current_cards[0][1], 'vietnamese':current_cards[0][2], 'word_level':new_level, 'word_date':datetime.date.today(), 'days_left': 0})
+    conn.commit()
 
-        # c.execute("REPLACE flashcards SET days_left=a WHERE id=1 VALUES (:)")
+def add_one_level():
+    new_level = current_cards[0][3] + 1
+    print(new_level)
+    print(current_cards[0])
+    print("advance 1 level") 
+    c.execute("REPLACE INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
+    {'id':current_cards[0][0], 'english':current_cards[0][1], 'vietnamese':current_cards[0][2], 'word_level':new_level, 'word_date':datetime.date.today(), 'days_left': spaced_repetition(new_level)})
+    conn.commit()
 
-        c.execute("INSERT INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
-        {'id':i[0], 'english':i[1], 'vietnamese':i[2], 'word_level':0, 'word_date':datetime.date(2019, 10, 29), 'days_left': 0})
-        # a = datetime.datetime.strptime(str(days_left), '%d')
-        # print(a)
-        # if days_left < (datetime.date.today()-datetime.date.today()):
-        #     print("days negative")
-        # if days_left > (datetime.date.today()-datetime.date.today()):
-        #     print("days positive")
-"""
+def add_two_levels():
+    new_level = current_cards[0][3] + 2
+    print(new_level)
+    print(current_cards[0])
+    print("advance 2 levels") 
+    c.execute("REPLACE INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
+    {'id':current_cards[0][0], 'english':current_cards[0][1], 'vietnamese':current_cards[0][2], 'word_level':new_level, 'word_date':datetime.date.today(), 'days_left': spaced_repetition(new_level)})
+    conn.commit()
+
+def spaced_repetition(level):
+    if level == 0:
+        return 0
+    elif level == 1:
+        return 1
+    elif level == 2:
+        return 2
+    elif level == 3:
+        return 3
+    elif level == 4:
+        return 4
+    elif level == 5:
+        return 5
+    elif level == 6:
+        return 6
+    elif level == 7:
+        return 7
+    elif level == 8:
+        return 8
+
 #Installing database
 if os.path.exists("flashcards.db"):
     print("database exists")
@@ -63,28 +111,16 @@ else:
 #Accessing Database
 conn = sqlite3.connect("flashcards.db")
 c = conn.cursor()
-# conn.create_function("today", 0, today)
 
-#Updating database
-# c.execute("UPDATE flashcards SET days_left = today()")
-# conn.commit()
-
-# days_left()
-
-
-# try:
-#     today = datetime.date.today()
-#     c.execute("UPDATE flashcards SET days_left = 'datetime.date.today()' - word_date")
-# except:
-#     pass
+days_left()
 
 
 #Requesting new cards
-try:
-    c.execute("SELECT * FROM flashcards WHERE days_left = 0 or days_left < 0")
-    current_cards = c.fetchmany(10)
-except:
-    pass
+
+c.execute("SELECT * FROM flashcards WHERE days_left <= 0")
+current_cards = c.fetchmany(10)
+print(current_cards)
+
 
 
 
@@ -201,10 +237,11 @@ class ResultsPage(GridLayout):
     def repeat_card(self, instance):
         print("repeat card..")
         try:
+            repeat()
             current_cards.pop(0)
             App.get_running_app().flashcards_page.title.text = current_cards[0][2]
             App.get_running_app().flashcards_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
-            print(current_cards)
+            # print(current_cards)
             language_app.screen_manager.current = "Flash"
         except:
             language_app.screen_manager.current = "Finished"
@@ -212,6 +249,7 @@ class ResultsPage(GridLayout):
     def ok_card(self, instance):
         print("ok card..")
         try:
+            add_one_level()
             current_cards.pop(0)
             App.get_running_app().flashcards_page.title.text = current_cards[0][2]
             App.get_running_app().flashcards_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
@@ -223,6 +261,7 @@ class ResultsPage(GridLayout):
     def easy_card(self, instance):
         print("easy card..")
         try:
+            add_two_levels()
             current_cards.pop(0)
             App.get_running_app().flashcards_page.title.text = current_cards[0][2]
             App.get_running_app().flashcards_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])

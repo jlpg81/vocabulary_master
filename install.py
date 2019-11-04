@@ -10,7 +10,7 @@ def install_database():
     c = conn.cursor()
 
     c.execute("""CREATE TABLE flashcards (
-        id integer UNIQUE,
+        id integer PRIMARY KEY,
         english text,
         vietnamese text,
         word_level integer,

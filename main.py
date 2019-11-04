@@ -7,46 +7,50 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.uix.image import Image
 from kivy.core.window import Window
 Window.clearcolor = (1, 1, 1, 1)
+from kivy.uix.widget import Widget
 from kivy.graphics import Color
-import sqlite3
-current_cards = []
-import random
 from kivy.app import App
+import sqlite3
 import datetime
 import os
 from install import install_database
+current_cards = []
+# from button import BlueButton
+# from kivy.graphics import Rectangle
 
+# class BlueButton(Button):
+#     def __init__(self, **kwargs):
+#         super().__init__(**kwargs)
 
-def today():
-    return str(datetime.date.today())
+#         with self.canvas:
+#             Rectangle(source = "./images/button/blue_button.jpg", size = (500, 100))
+            
 
+"""
+Main Functions - We can send these to other files if needed
+"""
 def days_left():
     c.execute("SELECT * FROM flashcards")
     cards = c.fetchall()
-    for i in cards:
-        year = int(i[4][0:4])
-        month = int(i[4][5:7])
-        day = int(i[4][8:10])
-        last_date = datetime.date(year, month, day)
-        
-        days_added = spaced_repetition(i[3])
-        # days_left = last_date + datetime.timedelta(days_added)
-        days_left = last_date + datetime.timedelta(days_added) - datetime.date.today()
-        print("old: " + str(days_left))
-        a = str(days_left).replace("0:00:00","")
-        print("new: "+a)
-        
-        try:
-            a = a.strip(" days,")
-        except:
-            a = 0
-        # a = int(str(days_left).strip(" days,"))
-        # except:
-        #     a = 0
-        # print(a)
-        c.execute("REPLACE INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
-        {'id':i[0], 'english':i[1], 'vietnamese':i[2], 'word_level':i[3], 'word_date':i[4], 'days_left': a})
-        conn.commit()
+    try:
+        for i in cards:
+            # print(i)
+            year = int(i[4][0:4])
+            month = int(i[4][5:7])
+            day = int(i[4][8:10])
+            last_date = datetime.date(year, month, day)
+            days_added = spaced_repetition(i[3])
+            days_left = last_date + datetime.timedelta(days_added) - datetime.date.today()
+            a = str(days_left).replace("0:00:00","")
+            try:
+                a = a.strip(" days,")
+            except:
+                a = 0
+            c.execute("REPLACE INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
+            {'id':i[0], 'english':i[1], 'vietnamese':i[2], 'word_level':i[3], 'word_date':i[4], 'days_left': a})
+            conn.commit()
+    except:
+        pass
         
 def repeat():
     if current_cards[0][3] >= 1:
@@ -54,29 +58,27 @@ def repeat():
     else:
         current_cards.append(current_cards[0])
         new_level = 0
-    
-    print(new_level)
-    
-    print(current_cards[0])
-    print("repeat at lvl 0") 
+    # print(new_level)
+    # print(current_cards[0])
+    # print("repeat at lvl 0") 
     c.execute("REPLACE INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
     {'id':current_cards[0][0], 'english':current_cards[0][1], 'vietnamese':current_cards[0][2], 'word_level':new_level, 'word_date':datetime.date.today(), 'days_left': 0})
     conn.commit()
 
 def add_one_level():
     new_level = current_cards[0][3] + 1
-    print(new_level)
-    print(current_cards[0])
-    print("advance 1 level") 
+    # print(new_level)
+    # print(current_cards[0])
+    # print("advance 1 level") 
     c.execute("REPLACE INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
     {'id':current_cards[0][0], 'english':current_cards[0][1], 'vietnamese':current_cards[0][2], 'word_level':new_level, 'word_date':datetime.date.today(), 'days_left': spaced_repetition(new_level)})
     conn.commit()
 
 def add_two_levels():
     new_level = current_cards[0][3] + 2
-    print(new_level)
-    print(current_cards[0])
-    print("advance 2 levels") 
+    # print(new_level)
+    # print(current_cards[0])
+    # print("advance 2 levels") 
     c.execute("REPLACE INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
     {'id':current_cards[0][0], 'english':current_cards[0][1], 'vietnamese':current_cards[0][2], 'word_level':new_level, 'word_date':datetime.date.today(), 'days_left': spaced_repetition(new_level)})
     conn.commit()
@@ -101,32 +103,34 @@ def spaced_repetition(level):
     elif level == 8:
         return 8
 
+
+"""
+Database code
+"""
 #Installing database
 if os.path.exists("flashcards.db"):
-    print("database exists")
+    # print("Database exists")
+    pass
 else:
-    print("installing database...")
+    # print("Installing database...")
     install_database()
 
 #Accessing Database
 conn = sqlite3.connect("flashcards.db")
 c = conn.cursor()
 
+#Recalculate days left until cards reappear
 days_left()
 
 
 #Requesting new cards
-
 c.execute("SELECT * FROM flashcards WHERE days_left <= 0")
 current_cards = c.fetchmany(10)
-print(current_cards)
 
 
-
-
-
-
-
+"""
+Kivy Pages
+"""
 class MainPage(GridLayout):
     def __init__(self, **kwargs):
         super().__init__( **kwargs)
@@ -171,7 +175,6 @@ class FlashcardsPage(GridLayout):
     def __init__(self, **kwargs):
         super(FlashcardsPage, self).__init__( **kwargs)
         self.cols = 1
-        
         try:
             self.title = Label(text=current_cards[0][2], color=[0, 0, 0, 1])
             self.add_widget(self.title)
@@ -184,7 +187,6 @@ class FlashcardsPage(GridLayout):
             self.results_button.bind(on_press = self.results)
             self.add_widget(self.results_button)
         except:
-            print("An error has occured in FlashcardsPage")
             language_app.screen_manager.current = "Main"
 
     def results(self, instance):
@@ -241,7 +243,6 @@ class ResultsPage(GridLayout):
             current_cards.pop(0)
             App.get_running_app().flashcards_page.title.text = current_cards[0][2]
             App.get_running_app().flashcards_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
-            # print(current_cards)
             language_app.screen_manager.current = "Flash"
         except:
             language_app.screen_manager.current = "Finished"
@@ -253,7 +254,6 @@ class ResultsPage(GridLayout):
             current_cards.pop(0)
             App.get_running_app().flashcards_page.title.text = current_cards[0][2]
             App.get_running_app().flashcards_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
-            print(current_cards)
             language_app.screen_manager.current = "Flash"
         except:
             language_app.screen_manager.current = "Finished"
@@ -265,7 +265,7 @@ class ResultsPage(GridLayout):
             current_cards.pop(0)
             App.get_running_app().flashcards_page.title.text = current_cards[0][2]
             App.get_running_app().flashcards_page.img.source = '.\\images\\{}\\{}.jpg'.format(current_cards[0][0], current_cards[0][1])
-            print(current_cards)
+            # print(current_cards)
             language_app.screen_manager.current = "Flash"
         except:
             language_app.screen_manager.current = "Finished"

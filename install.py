@@ -24,7 +24,6 @@ def install_database():
 
     c.execute("SELECT * FROM flashcards")
 
-    # print(c.fetchall())
 
     conn.commit()
 

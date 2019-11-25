@@ -15,16 +15,6 @@ import datetime
 import os
 from install import install_database
 current_cards = []
-# from button import BlueButton
-# from kivy.graphics import Rectangle
-
-# class BlueButton(Button):
-#     def __init__(self, **kwargs):
-#         super().__init__(**kwargs)
-
-#         with self.canvas:
-#             Rectangle(source = "./images/button/blue_button.jpg", size = (500, 100))
-            
 
 """
 Main Functions - We can send these to other files if needed
@@ -58,27 +48,18 @@ def repeat():
     else:
         current_cards.append(current_cards[0])
         new_level = 0
-    # print(new_level)
-    # print(current_cards[0])
-    # print("repeat at lvl 0") 
     c.execute("REPLACE INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
     {'id':current_cards[0][0], 'english':current_cards[0][1], 'vietnamese':current_cards[0][2], 'word_level':new_level, 'word_date':datetime.date.today(), 'days_left': 0})
     conn.commit()
 
 def add_one_level():
     new_level = current_cards[0][3] + 1
-    # print(new_level)
-    # print(current_cards[0])
-    # print("advance 1 level") 
     c.execute("REPLACE INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
     {'id':current_cards[0][0], 'english':current_cards[0][1], 'vietnamese':current_cards[0][2], 'word_level':new_level, 'word_date':datetime.date.today(), 'days_left': spaced_repetition(new_level)})
     conn.commit()
 
 def add_two_levels():
     new_level = current_cards[0][3] + 2
-    # print(new_level)
-    # print(current_cards[0])
-    # print("advance 2 levels") 
     c.execute("REPLACE INTO flashcards VALUES (:id, :english, :vietnamese, :word_level, :word_date, :days_left)",
     {'id':current_cards[0][0], 'english':current_cards[0][1], 'vietnamese':current_cards[0][2], 'word_level':new_level, 'word_date':datetime.date.today(), 'days_left': spaced_repetition(new_level)})
     conn.commit()
@@ -287,6 +268,10 @@ class FinishedPage(GridLayout):
     def finished(self, instance):
         language_app.screen_manager.current = "Main"
 
+"""
+Statistics and Instructions. Not really needed to show if the app works or not.
+"""
+
 class StatisticsPage(GridLayout):
     def __init__(self, **kwargs):
         super(StatisticsPage, self).__init__( **kwargs)
@@ -357,6 +342,5 @@ class MyApp(App):
         return self.screen_manager
 
 if __name__ == "__main__":
-    # add database creation if it does not yet exist, by running install.py
     language_app = MyApp()
     language_app.run()
